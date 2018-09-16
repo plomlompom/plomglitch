@@ -40,17 +40,16 @@ class Melody:
 
     def compute(self, t):
 
+        def rotate_from_tosp(value):
+            return (self.tosp + value) % 256
+
         def push(value):
-            self.tosp += 1
-            if self.tosp == 256:
-                self.tosp = 0
+            self.tosp = rotate_from_tosp(1)
             self.stack[self.tosp] = value & MAXINT
 
         def pop():
             value = self.stack[self.tosp]
-            self.tosp -= 1
-            if self.tosp == -1:
-                self.tosp = 255
+            self.tosp = rotate_from_tosp(-1)
             return value
 
         for token in self.tokens: 
@@ -59,97 +58,69 @@ class Melody:
             elif token == 'a':  # T
                 push(t)
             elif token == 'b':  # PUT 
-                v1 = self.tosp
-                v2 = v1 % 256
-                v3 = v2 + 1
-                if self.tosp < 255:
-                    v4 = self.tosp + 1
-                else:
-                    v4 = self.tosp + 1 - 256
-                v4_pos = self.tosp - v3 + (self.tosp >= v3) * 256
-                self.stack[v4_pos] = v4
+                v3 = self.tosp % 256 + 1
+                v4 = rotate_from_tosp(1)
+                self.stack[rotate_from_tosp(-v3)] = v4
                 pop()
             elif token == 'c':  # DROP
                 pop()
             elif token == 'd':  # MUL
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 push((v1 * v2))
             elif token == 'e':  # DIV
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 push(0 if v1 == 0 else int(v2 / v1))
             elif token == 'f':  # ADD 
-                v1 = pop()
-                v2 = pop()
-                v3 = v2 + v1
-                push(v3)
+                v1, v2 = pop(), pop()
+                push(v2 + v1)
             elif token == 'g':  # SUB 
-                v1 = pop()
-                v2 = pop()
-                v3 = v2 - v1
-                push(v3)
+                v1, v2 = pop(), pop()
+                push(v2 - v1)
             elif token == 'h':  # MOD
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 push(0 if v1 == 0 else int(v2 % v1))
             elif token == 'j':  # LSHIFT
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 v3 = v2 << v1 if v1 < 32 else 0
                 push(v3)
             elif token == 'k':  # RSHIFT
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 v3 = v2 >> v1 if v1 < 32 else 0
                 push(v3)
             elif token == 'l':  # AND
-                v1 = pop()
-                v2 = pop()
-                v3 = v1 & v2
-                push(v3)
+                v1, v2 = pop(), pop()
+                push(v1 & v2)
             elif token == 'm':  # OR
-                v1 = pop()
-                v2 = pop()
-                v3 = v1 | v2
-                push(v3)
+                v1, v2 = pop(), pop()
+                push(v1 | v2)
             elif token == 'n':  # XOR
-                v1 = pop()
-                v2 = pop()
-                v3 = v1 ^ v2
-                push(v3)
+                v1, v2 = pop(), pop()
+                push(v1 ^ v2)
             elif token == 'o':  # NOT
                 v1 = pop()
-                v2 = ~v1
-                push(v2)
+                push(~v1)
             elif token == 'p':  # DUP
                 v1 = pop()
                 push(v1)
                 push(v1)
             elif token == 'q':  # PICK
-                v1 = self.stack[self.tosp]
-                v2 = v1 + 1
-                v3 = v2 % 256
-                v4_pos = self.tosp - v3 + (self.tosp < v3) * 256
+                v3 = (self.stack[self.tosp] + 1) % 256
+                v4_pos = rotate_from_tosp(-v3)
                 v4 = self.stack[v4_pos]
                 pop()
                 push(v4)
             elif token == 'r':  # SWAP 
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 push(v1)
                 push(v2)
             elif token == 's':  # LT 
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 push(MAXINT if v2 < v1 else 0)
             elif token == 't':  # GT 
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 push(MAXINT if v2 > v1 else 0)
             elif token == 'u':  # EQ
-                v1 = pop()
-                v2 = pop()
+                v1, v2 = pop(), pop()
                 push(MAXINT if v2 == v1 else 0)
         result = self.stack[self.tosp] & 0xFF
         return result

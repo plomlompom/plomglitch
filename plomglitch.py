@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 #-*- eval: (auto-fill-mode 1); fill-column: 79; -*-
-import pygame
 import numpy
 import sys
 import os
+import contextlib
+# Suppress pygame welcoming message, see <https://stackoverflow.com/a/51470016>.
+with contextlib.redirect_stdout(None):
+        import pygame
 HEXDIGITS = '0123456789ABCDEF'
 OPCODES = 'abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ'
 MAXINT = 0xFFFFFFFF
@@ -161,6 +164,7 @@ elif args.glitch_string:
 else:
     argparser.print_help()
     sys.exit(1)
+
 frame_size = 2 ** audio_bit_depth
 pygame.init()
 channel = pygame.mixer.find_channel()

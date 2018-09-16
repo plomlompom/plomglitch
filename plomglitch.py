@@ -12,15 +12,6 @@ OPCODES = 'abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ'
 MAXINT = 0xFFFFFFFF
 
 
-frequency = 8000  # samples per second
-audio_bit_depth = 8  # bit size of samples
-num_channels = 1  # mono
-buffer_size = 256  # how many samples to buffer
-pygame.mixer.pre_init(frequency, audio_bit_depth, num_channels, buffer_size)
-# The user will define the buffer, that is, the samples / curve of one
-# buffer_size/frequency of a second.
-
-
 class Melody:
     def __init__(self, melody_string):
         self.lines = melody_string.split('!')
@@ -133,6 +124,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Plom\'s glitcher')
     parser.add_argument('-f', dest='glitch_file_path', action='store',
                         help='text file containing glitch code')
+    parser.add_argument('-o', dest='stdout', action='store_true',
+                        help='write to stdout instead of playing/displaying')
     parser.add_argument('-d', dest='display', action='store_true',
                         help='display waveform')
     parser.add_argument('glitch_string', action='store', nargs='?',
@@ -165,14 +158,27 @@ else:
     argparser.print_help()
     sys.exit(1)
 
+# Just writing raw wave data to stdout.
+if args.stdout:
+    i = 0
+    while True:
+        sys.stdout.write(chr(melody.compute(i)))
+        i += 1
+
+# Audio and video playback.
+frequency = 8000  # samples per second
+audio_bit_depth = 8  # bit size of samples
+num_channels = 1  # mono
+buffer_size = 256  # how many samples to buffer
+pygame.mixer.pre_init(frequency, audio_bit_depth, num_channels, buffer_size)
 frame_size = 2 ** audio_bit_depth
 pygame.init()
 channel = pygame.mixer.find_channel()
 size = width, height = buffer_size, frame_size
 if args.display:
     screen = pygame.display.set_mode(size)
-i = 0
 clock = pygame.time.Clock()
+i = 0
 while True:
     # Output.
     if channel.get_queue() == None:

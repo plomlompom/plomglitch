@@ -40,23 +40,17 @@ class Melody:
 
     def compute(self, t):
 
-        def inc_tosp():
+        def push(value):
             self.tosp += 1
             if self.tosp == 256:
                 self.tosp = 0
-
-        def dec_tosp():
-            self.tosp -= 1
-            if self.tosp == -1:
-                self.tosp = 255
-
-        def push(value):
-            inc_tosp()
             self.stack[self.tosp] = value & MAXINT
 
         def pop():
             value = self.stack[self.tosp]
-            dec_tosp()
+            self.tosp -= 1
+            if self.tosp == -1:
+                self.tosp = 255
             return value
 
         for token in self.tokens: 

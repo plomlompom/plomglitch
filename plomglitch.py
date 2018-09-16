@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-#import os, sys
+#-*- eval: (auto-fill-mode 1); fill-column: 79; -*-
 import pygame
 import numpy
 import time
 import sys
+HEXDIGITS = '0123456789ABCDEF'
+OPCODES = 'abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ'
+MAXINT = 0xFFFFFFFF
+
 
 frequency = 8192  # samples per second
 audio_bit_depth = 8  # bit size of samples
@@ -13,19 +17,18 @@ pygame.mixer.pre_init(frequency, audio_bit_depth, num_channels, buffer_size)
 # The user will define the buffer, that is, the samples / curve of one
 # buffer_size/frequency of a second.
 
+
 def draw(screen, buf):
     background_color = (0, 0, 0)
     foreground_color = (255, 255, 255)
+    lowest_line = 255
     screen.fill(background_color)
     for x, y in enumerate(buf):
         y = frame_size - y - 1
-        pygame.draw.line(screen, foreground_color, (x, 255), (x, y))
+        pygame.draw.line(screen, foreground_color, (x, lowest_line), (x, y))
     pygame.display.flip()
 
 
-HEXDIGITS = '0123456789ABCDEF'
-OPCODES = 'abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ'
-MAXINT = 0xFFFFFFFF
 class Melody:
     def __init__(self, melody_string):
         self.lines = melody_string.split('!')
@@ -169,17 +172,14 @@ pygame.init()
 channel = pygame.mixer.find_channel()
 size = width, height = buffer_size, frame_size
 screen = pygame.display.set_mode(size)
-running = True
-loud = True 
 i = 0
-while running:
+while True:
     # Output.
     if channel.get_queue() == None:
         buf = [melody.compute(x) for x in range(i, i+buffer_size)]
         i += buffer_size
         sound = pygame.sndarray.make_sound(numpy.array(buf, numpy.uint8))
-        if loud:
-            channel.queue(sound)
+        channel.queue(sound)
         draw(screen, buf)
 
     # Control.
@@ -187,10 +187,7 @@ while running:
         if event.type == pygame.QUIT:
             # Common quitting methods will be caught by PyGame,
             # so do this explicitely.
-            running = False
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_F1:
-                loud = False if loud else True
+            sys.exit(0)
 
-    # Some breathing space.
+    # Some loop breathing space.
     time.sleep(0.001)

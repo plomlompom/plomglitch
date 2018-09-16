@@ -2,7 +2,6 @@
 #-*- eval: (auto-fill-mode 1); fill-column: 79; -*-
 import pygame
 import numpy
-import time
 import sys
 import os
 HEXDIGITS = '0123456789ABCDEF'
@@ -169,6 +168,7 @@ size = width, height = buffer_size, frame_size
 if args.display:
     screen = pygame.display.set_mode(size)
 i = 0
+clock = pygame.time.Clock()
 while True:
     # Output.
     if channel.get_queue() == None:
@@ -187,4 +187,4 @@ while True:
             sys.exit(0)
 
     # Some loop breathing space.
-    time.sleep(0.001)
+    clock.tick(40)

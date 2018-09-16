@@ -187,7 +187,7 @@ if args.glitch_file_path:
         lines = f.readlines()
     melody = Melody(lines[0].rstrip())
 elif args.glitch_string:
-    melody = Melody(sys.argv[1])
+    melody = Melody(args.glitch_string)
 else:
     argparser.print_help()
     sys.exit(1)

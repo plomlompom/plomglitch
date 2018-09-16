@@ -4,6 +4,7 @@ import pygame
 import numpy
 import time
 import sys
+import os
 HEXDIGITS = '0123456789ABCDEF'
 OPCODES = 'abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ'
 MAXINT = 0xFFFFFFFF
@@ -16,17 +17,6 @@ buffer_size = 256  # how many samples to buffer
 pygame.mixer.pre_init(frequency, audio_bit_depth, num_channels, buffer_size)
 # The user will define the buffer, that is, the samples / curve of one
 # buffer_size/frequency of a second.
-
-
-def draw(screen, buf):
-    background_color = (0, 0, 0)
-    foreground_color = (255, 255, 255)
-    lowest_line = 255
-    screen.fill(background_color)
-    for x, y in enumerate(buf):
-        y = frame_size - y - 1
-        pygame.draw.line(screen, foreground_color, (x, lowest_line), (x, y))
-    pygame.display.flip()
 
 
 class Melody:
@@ -49,21 +39,26 @@ class Melody:
         return tokens
 
     def compute(self, t):
+
         def inc_tosp():
             self.tosp += 1
             if self.tosp == 256:
                 self.tosp = 0
+
         def dec_tosp():
             self.tosp -= 1
             if self.tosp == -1:
                 self.tosp = 255
+
         def push(value):
             inc_tosp()
             self.stack[self.tosp] = value & MAXINT
+
         def pop():
             value = self.stack[self.tosp]
             dec_tosp()
             return value
+
         for token in self.tokens: 
             if not token in OPCODES:
                 push(int(token, 16))
@@ -166,12 +161,48 @@ class Melody:
         return result
 
 
-melody = Melody(sys.argv[1])
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description='Plom\'s glitcher')
+    parser.add_argument('-f', dest='glitch_file_path', action='store',
+                        help='text file containing glitch code')
+    parser.add_argument('-d', dest='display', action='store_true',
+                        help='display waveform')
+    parser.add_argument('glitch_string', action='store', nargs='?',
+                        help='glitch code')
+    return parser, parser.parse_args()
+
+
+def draw(screen, buf):
+    background_color = (0, 0, 0)
+    foreground_color = (255, 255, 255)
+    lowest_line = 255
+    screen.fill(background_color)
+    for x, y in enumerate(buf):
+        y = frame_size - y - 1
+        pygame.draw.line(screen, foreground_color, (x, lowest_line), (x, y))
+    pygame.display.flip()
+
+
+argparser, args = parse_args()
+if args.glitch_file_path:
+    if not os.path.isfile(args.glitch_file_path):
+        print('File not found.')
+        sys.exit(1)
+    with open(args.glitch_file_path, 'r') as f:
+        lines = f.readlines()
+    melody = Melody(lines[0].rstrip())
+elif args.glitch_string:
+    melody = Melody(sys.argv[1])
+else:
+    argparser.print_help()
+    sys.exit(1)
 frame_size = 2 ** audio_bit_depth
 pygame.init()
 channel = pygame.mixer.find_channel()
 size = width, height = buffer_size, frame_size
-screen = pygame.display.set_mode(size)
+if args.display:
+    screen = pygame.display.set_mode(size)
 i = 0
 while True:
     # Output.
@@ -180,7 +211,8 @@ while True:
         i += buffer_size
         sound = pygame.sndarray.make_sound(numpy.array(buf, numpy.uint8))
         channel.queue(sound)
-        draw(screen, buf)
+        if args.display:
+            draw(screen, buf)
 
     # Control.
     for event in pygame.event.get():

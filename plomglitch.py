@@ -10,7 +10,7 @@ OPCODES = 'abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ'
 MAXINT = 0xFFFFFFFF
 
 
-frequency = 8192  # samples per second
+frequency = 8000  # samples per second
 audio_bit_depth = 8  # bit size of samples
 num_channels = 1  # mono
 buffer_size = 256  # how many samples to buffer
